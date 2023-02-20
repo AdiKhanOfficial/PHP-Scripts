@@ -1,0 +1,215 @@
+<html>
+    <head>
+        <title>SPINWHEEL GAME ZONE</title>
+        <link rel="stylesheet" href="css/main.css" type="text/css" />
+		<link rel="stylesheet" href="css/bootstrap.css"/>        
+        <script src="js/jquery.js"></script>
+        <script src="js/bootstrap.js"></script>
+		<script type="text/javascript" src="js/Winwheel.js"></script>
+        <script src="js/TweenMax.min.js"></script>
+    </head>
+    <body style="background:#31a188;;font-family:Times New Roman;font-weight:bold">
+        <div align="center" class="container">
+		<br><br>
+		<div class="thumbnail">
+			<div class="row">
+				<h1>SPINWHEEL GAME ZONE</h1>
+				<br> 
+				<h2 class="row thumbnail alert-success" id="result" style="display:none">
+					<div class="" id="alert"></div>
+				</h2>
+				
+					<div class="col-sm-1">
+					
+					</div>
+					<div class="col-sm-10" style="background:url(css/wheel_back.png);background-repeat:no-repeat;background-position:top;height:600px">
+							<canvas id="canvas" width="434" height="434" style="margin-top:74px;cursor:pointer"  onClick="powerSelected(3);resetWheel();startSpin();">
+								<p style="{color: white}" align="center">Sorry, your browser doesn't support canvas. Please try another.</p>
+							</canvas>
+					 </div>
+					 <div class="col-sm-1">
+					
+					</div>					
+				</div>
+				<div class="row">
+						<button class="btn btn-primary" onclick="addNode();" id="addButton">Add Player(s)</button> 
+						<button class="btn btn-warning" onclick="removeNode();" id="removeButton">Remove Player(s)</button> 
+					</div> 
+			</div>
+			
+			<div class="thumbnail row">
+				<div class="col-sm-4">All Rights Reserved By <br><a href="https://facebook.com/AdiKhanOfficial">AdiKhanOfficial</a></div> 
+				<div class="col-sm-4">Developed By <br><a href="https://facebook.com/AdiKhanOfficial">AdiKhanOfficial</a></div> 
+				<div class="col-sm-4">Powered By <br><a href="https://www.mikservices.com">MIK Services</a></div> 
+			</div>
+        </div>
+        <script>
+            // Create new wheel object specifying the parameters at creation time.
+			 players = 0;
+			 nodes = new Array();
+			 playerNames = new Array();
+			 colors = new Array('#eae56f','#89f26e','#7de6ef','#e7706f');
+			
+            function updateWheel(){			
+				var colorCount = 0;
+				for(i=1;i<=playerNames.length;i++){
+					nodes[i-1] = {'fillStyle' : colors[colorCount], 'text' : playerNames[i-1]};
+					colorCount++;
+					if(colorCount == colors.length){
+						colorCount = 0;
+					}
+				}
+				 theWheel = new Winwheel({
+					'numSegments'  : playerNames.length,     // Specify number of segments.
+					'outerRadius'  : 212,   // Set outer radius so wheel fits inside the background.
+					'textFontSize' : 15,    // Set font size as desired.
+					'segments'     :        // Define segments including colour and text.
+					nodes,
+					'animation' :           // Specify the animation to use.
+					{
+						'type'     : 'spinToStop',
+						'duration' : 8,
+						'spins'    : 11,
+						'callbackFinished' : alertPrize,
+						'callbackSound'    : playSound,   // Function to call when the tick sound is to be triggered.
+						'soundTrigger'     : 'pin'        // Specify pins are to trigger the sound, the other option is 'segment'.
+					},
+					'pins' :
+					{
+						'number' : playerNames.length*2   // Number of pins. They space evenly around the wheel.
+					}
+				});
+			}
+
+            // -----------------------------------------------------------------
+            // This function is called when the segment under the prize pointer changes
+            // we can play a small tick sound here like you would expect on real prizewheels.
+            // -----------------------------------------------------------------
+            var audio = new Audio('css/tick.mp3');  // Create audio object and load tick.mp3 file.
+
+            function playSound()
+            {
+                // Stop and rewind the sound if it already happens to be playing.
+                audio.pause();
+                audio.currentTime = 0;
+
+                // Play the sound.
+                audio.play();
+            }
+
+            // -------------------------------------------------------
+            // Called when the spin animation has finished by the callback feature of the wheel because I specified callback in the parameters
+            // note the indicated segment is passed in as a parmeter as 99% of the time you will want to know this to inform the user of their prize.
+            // -------------------------------------------------------
+            function alertPrize(indicatedSegment)
+            {
+                // Do basic alert of the segment text.
+                // You would probably want to do something more interesting with this information.
+				$("#result").slideDown();
+				document.getElementById("alert").innerText="It's on  " + indicatedSegment.text;
+				document.getElementById("addButton").disabled=false;
+				document.getElementById("removeButton").disabled=false;
+            }
+
+            // =======================================================================================================================
+            // Code below for the power controls etc which is entirely optional. You can spin the wheel simply by
+            // calling theWheel.startAnimation();
+            // =======================================================================================================================
+            var wheelPower    = 0;
+            var wheelSpinning = false;
+
+            // -------------------------------------------------------
+            // Function to handle the onClick on the power buttons.
+            // -------------------------------------------------------
+            function powerSelected(powerLevel)
+            {
+                // Ensure that power can't be changed while wheel is spinning.
+                if (wheelSpinning == false)
+                {
+    
+
+                    // Set wheelPower var used when spin button is clicked.
+                    wheelPower = powerLevel;
+                }
+            }
+
+            // -------------------------------------------------------
+            // Click handler for spin button.
+            // -------------------------------------------------------
+            function startSpin()
+            {
+                // Ensure that spinning can't be clicked again while already running.
+                if (wheelSpinning == false)
+                {
+                    // Based on the power level selected adjust the number of spins for the wheel, the more times is has
+                    // to rotate with the duration of the animation the quicker the wheel spins.
+                    if (wheelPower == 1)
+                    {
+                        theWheel.animation.spins = 3;
+                    }
+                    else if (wheelPower == 2)
+                    {
+                        theWheel.animation.spins = 8;
+                    }
+                    else if (wheelPower == 3)
+                    {
+                        theWheel.animation.spins = 15;
+                    }
+					document.getElementById("addButton").disabled=true;
+					document.getElementById("removeButton").disabled=true;
+
+                    // Begin the spin animation by calling startAnimation on the wheel object.
+                    theWheel.startAnimation();
+
+                    // Set to true so that power can't be changed and spin button re-enabled during
+                    // the current animation. The user will have to reset before spinning again.
+                    wheelSpinning = true;
+                }
+            }
+
+            // -------------------------------------------------------
+            // Function for reset button.
+            // -------------------------------------------------------
+            function resetWheel()
+            {
+			
+				$("#result").slideUp();
+				document.getElementById("alert").innerText="";
+                theWheel.stopAnimation(false);  // Stop the animation, false as param so does not call callback function.
+                theWheel.rotationAngle = 0;     // Re-set the wheel angle to 0 degrees.
+                theWheel.draw();
+
+                wheelSpinning = false;          // Reset to false to power buttons and spin can be clicked again.
+            }
+			
+			function addNode(){
+				do{
+				players = parseInt(window.prompt("Please Enter Number of Players"));
+				}
+				while(players < 1 || isNaN(players));
+				for(i=1;i<=players;i++){
+					playerNames[playerNames.length] = window.prompt("Enter Player "+i+" Name");
+				}
+				updateWheel();
+			}
+			
+			function removeNode(){
+				var name = window.prompt("Enter Player Name to Delete");
+				for(i=0;i<playerNames.length;i++){
+					var currentPlayer = playerNames[i]
+					if(currentPlayer.search(name) != -1){
+						var confirm = window.confirm("Do you want to Remove "+name+"?");
+						if(confirm){
+							playerNames.splice(i,1);;
+							updateWheel();
+						}
+					}
+				}
+			}
+			addNode();
+			
+			
+			
+        </script>
+    </body>
+</html>
